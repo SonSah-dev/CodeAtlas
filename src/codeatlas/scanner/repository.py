@@ -1,5 +1,8 @@
 from pathlib import Path
 
+from codeatlas.scanner.languages import EXTENSION_TO_LANGUAGE
+from codeatlas.scanner.models import FileMetadata
+
 
 IGNORED_DIRECTORIES = {
     ".git",
@@ -11,7 +14,7 @@ IGNORED_DIRECTORIES = {
 }
 
 
-def scan_repository(repository_path: str) -> list[Path]:
+def scan_repository(repository_path: str) -> list[FileMetadata]:
     root = Path(repository_path).resolve()
 
     if not root.exists():
@@ -29,6 +32,26 @@ def scan_repository(repository_path: str) -> list[Path]:
         if any(part in IGNORED_DIRECTORIES for part in path.parts):
             continue
 
-        files.append(path)
+        extension = path.suffix.lower()
+        language = EXTENSION_TO_LANGUAGE.get(extension)
+
+        if language is None:
+            continue
+
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+
+        files.append(
+            FileMetadata(
+                path=path,
+                relative_path=path.relative_to(root),
+                extension=extension,
+                language=language,
+                size=path.stat().st_size,
+                content=content,
+            )
+        )
 
     return files
