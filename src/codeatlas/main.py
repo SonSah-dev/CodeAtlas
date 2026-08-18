@@ -1,12 +1,26 @@
 from fastapi import FastAPI
 
-app = FastAPI(
-    title="CodeAtlas API",
-    description="AI-powered code intelligence platform",
-    version="0.1.0",
-)
+from codeatlas.api.routes import create_router
+from codeatlas.app.factory import create_rag_service
 
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="CodeAtlas",
+        description="AI-powered codebase search and question answering",
+    )
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    rag_service = create_rag_service()
+
+    app.include_router(
+        create_router(rag_service),
+    )
+
+    return app
+
+
+app = create_app()

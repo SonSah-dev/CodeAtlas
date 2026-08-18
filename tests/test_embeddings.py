@@ -1,15 +1,12 @@
 from pathlib import Path
 
+from google import genai
+
 from codeatlas.chunking.models import CodeChunk
-from codeatlas.embeddings.provider import EmbeddingProvider
+from codeatlas.embeddings.gemini_provider import GeminiEmbeddingProvider
 
 
-class FakeEmbeddingProvider(EmbeddingProvider):
-    def embed(self, chunk: CodeChunk) -> list[float]:
-        return [0.1, 0.2, 0.3]
-
-
-def test_embedding_provider_returns_vector():
+def test_gemini_embedding_provider():
     chunk = CodeChunk(
         file_path=Path("main.py"),
         language="python",
@@ -17,8 +14,10 @@ def test_embedding_provider_returns_vector():
         content="print('hello')",
     )
 
-    provider = FakeEmbeddingProvider()
+    client = genai.Client()
+    provider = GeminiEmbeddingProvider(client)
 
     vector = provider.embed(chunk)
 
-    assert vector == [0.1, 0.2, 0.3]
+    assert isinstance(vector, list)
+    assert len(vector) == 3072
