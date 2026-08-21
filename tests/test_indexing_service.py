@@ -39,7 +39,10 @@ def test_indexing_service():
         vector_store=store,
     )
 
-    count = service.index(".")
+    count = service.index(
+        ".", 
+        repository_id="test-repo",
+        )
 
     assert count > 0
     assert len(store.received_chunks) == count

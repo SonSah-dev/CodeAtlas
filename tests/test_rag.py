@@ -29,6 +29,7 @@ class FakeVectorStore(VectorStore):
         self,
         vector: list[float],
         limit: int = 5,
+        repository_id: str | None = None,
     ) -> list[SearchResult]:
         return [
             SearchResult(
@@ -74,7 +75,8 @@ def test_rag_service():
     )
 
     answer = rag_service.answer(
-        "Where is authentication handled?"
+        question="Where is authentication handled?",
+        repository_id="test-repo",
     )
 
     assert answer == "Authentication is handled in auth.py."

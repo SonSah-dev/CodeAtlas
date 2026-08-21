@@ -17,10 +17,12 @@ class RAGService:
     def answer(
         self,
         question: str,
+        repository_id: str,
         limit: int = 5,
     ) -> str:
         results = self.search_service.search(
             query=question,
+            repository_id=repository_id,
             limit=limit,
         )
 

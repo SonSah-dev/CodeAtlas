@@ -14,7 +14,11 @@ class IndexingService:
         self.embedding_provider = embedding_provider
         self.vector_store = vector_store
 
-    def index(self, repository_path: str) -> int:
+    def index(
+        self,
+        repository_path: str,
+        repository_id: str,
+    ) -> int:
         files = scan_repository(repository_path)
 
         chunks = []
@@ -31,6 +35,7 @@ class IndexingService:
                 EmbeddedChunk(
                     chunk=chunk,
                     vector=vector,
+                    repository_id=repository_id,
                 )
             )
 

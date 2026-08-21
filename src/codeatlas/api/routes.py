@@ -12,6 +12,7 @@ def create_router(rag_service: RAGService) -> APIRouter:
     def ask(request: AskRequest) -> AskResponse:
         answer = rag_service.answer(
             question=request.question,
+            repository_id=request.repository_id,
             limit=request.limit,
         )
 

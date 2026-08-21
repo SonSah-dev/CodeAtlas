@@ -7,18 +7,21 @@ from codeatlas.embeddings.gemini_provider import GeminiEmbeddingProvider
 from codeatlas.indexing.service import IndexingService
 from codeatlas.vectorstore.qdrant_store import QdrantVectorStore
 
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: python -m codeatlas.indexing.cli <repository_path>")
-        raise SystemExit(1)
+
+def main() -> None:
+    if len(sys.argv) != 3:
+        print(
+            "Usage: python -m codeatlas.indexing.cli "
+            "<repository_path> <repository_id>"
+        )
+        sys.exit(1)
 
     repository_path = sys.argv[1]
+    repository_id = sys.argv[2]
 
-    gemini_client = genai.Client()
+    client = genai.Client()
 
-    embedding_provider = GeminiEmbeddingProvider(
-        client=gemini_client,
-    )
+    embedding_provider = GeminiEmbeddingProvider(client)
 
     qdrant_client = QdrantClient(
         host="localhost",
@@ -33,14 +36,20 @@ def main():
 
     vector_store.create_collection()
 
-    indexing_service = IndexingService(
+    service = IndexingService(
         embedding_provider=embedding_provider,
         vector_store=vector_store,
     )
 
-    count = indexing_service.index(repository_path)
+    count = service.index(
+        repository_path=repository_path,
+        repository_id=repository_id,
+    )
 
-    print(f"Indexed {count} chunks from {repository_path}")
+    print(
+        f"Indexed {count} chunks "
+        f"from repository '{repository_id}'"
+    )
 
 
 if __name__ == "__main__":

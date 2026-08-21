@@ -7,3 +7,4 @@ from codeatlas.chunking.models import CodeChunk
 class EmbeddedChunk:
     chunk: CodeChunk
     vector: list[float]
+    repository_id: str

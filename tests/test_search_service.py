@@ -29,6 +29,7 @@ class FakeVectorStore(VectorStore):
         self,
         vector: list[float],
         limit: int = 5,
+        repository_id: str | None = None,
     ) -> list[SearchResult]:
         self.received_vector = vector
         self.received_limit = limit
@@ -55,6 +56,7 @@ def test_search_service():
 
     results = service.search(
         query="authentication",
+        repository_id="test-repo",
         limit=1,
     )
 

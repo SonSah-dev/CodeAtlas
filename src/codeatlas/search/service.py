@@ -15,6 +15,7 @@ class SearchService:
     def search(
         self,
         query: str,
+        repository_id: str,
         limit: int = 5,
     ) -> list[SearchResult]:
         vector = self.embedding_provider.embed_text(query)
@@ -22,4 +23,5 @@ class SearchService:
         return self.vector_store.search(
             vector=vector,
             limit=limit,
+            repository_id=repository_id,
         )

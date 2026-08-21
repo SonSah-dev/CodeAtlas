@@ -1,12 +1,22 @@
 from pathlib import Path
+from uuid import UUID, uuid5
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
-from codeatlas.chunking.models import CodeChunk
 from codeatlas.embeddings.models import EmbeddedChunk
-from codeatlas.vectorstore.store import VectorStore
 from codeatlas.search.models import SearchResult
+from codeatlas.vectorstore.store import VectorStore
+
+
+POINT_NAMESPACE = UUID("12345678-1234-5678-1234-567812345678")
 
 
 class QdrantVectorStore(VectorStore):
@@ -35,21 +45,33 @@ class QdrantVectorStore(VectorStore):
     def upsert(self, chunks: list[EmbeddedChunk]) -> None:
         points = []
 
-        for index, embedded_chunk in enumerate(chunks):
+        for embedded_chunk in chunks:
+            chunk = embedded_chunk.chunk
+
+            point_key = (
+                f"{embedded_chunk.repository_id}:"
+                f"{chunk.file_path}:"
+                f"{chunk.chunk_index}"
+            )
+
+            point_id = uuid5(POINT_NAMESPACE, point_key)
+
             points.append(
                 PointStruct(
-                    id=index,
+                    id=point_id,
                     vector=embedded_chunk.vector,
                     payload={
-                        "file_path": str(
-                            embedded_chunk.chunk.file_path
-                        ),
-                        "language": embedded_chunk.chunk.language,
-                        "chunk_index": embedded_chunk.chunk.chunk_index,
-                        "content": embedded_chunk.chunk.content,
+                        "repository_id": embedded_chunk.repository_id,
+                        "file_path": str(chunk.file_path),
+                        "language": chunk.language,
+                        "chunk_index": chunk.chunk_index,
+                        "content": chunk.content,
                     },
                 )
             )
+
+        if not points:
+            return
 
         self.client.upsert(
             collection_name=self.collection_name,
@@ -59,11 +81,25 @@ class QdrantVectorStore(VectorStore):
     def search(
         self,
         vector: list[float],
+        repository_id: str | None = None,
         limit: int = 5,
     ) -> list[SearchResult]:
+        query_filter = None
+
+        if repository_id is not None:
+            query_filter = Filter(
+                must=[
+                    FieldCondition(
+                        key="repository_id",
+                        match=MatchValue(value=repository_id),
+                    )
+                ]
+            )
+
         results = self.client.query_points(
             collection_name=self.collection_name,
             query=vector,
+            query_filter=query_filter,
             limit=limit,
             with_vectors=False,
         ).points
